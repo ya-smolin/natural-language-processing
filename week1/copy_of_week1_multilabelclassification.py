@@ -23,6 +23,8 @@ In this task you will need the following libraries:
 The following cell will download all data required for this assignment into the folder `week1/data`.
 """
 import sys
+from collections import Counter
+
 from grader import Grader
 import nltk
 from nltk.corpus import stopwords
@@ -31,8 +33,26 @@ import pandas as pd
 import numpy as np
 
 sys.path.append("..")
+from common.download_utils import download_week1_resources
+download_week1_resources()
+
 grader = Grader()
 nltk.download('stopwords')
+
+def submitAll():
+    """
+    Authorization & Submission
+    To submit assignment parts to Cousera platform, please, enter your e-mail
+     and token into variables below. You can generate token on this programming assignment page.
+    <b>Note:</b> Token expires 30 minutes after generation.
+    """
+    grader.status()
+    STUDENT_EMAIL = "yaroslavsmolin@gmail.com"  # EMAIL
+    STUDENT_TOKEN = "Mr3HaYIApvXBJ4Xk"  # TOKEN
+    grader.status()
+    """If you want to submit these answers, run cell below"""
+    grader.submit(STUDENT_EMAIL, STUDENT_TOKEN)
+    exit(0)
 
 
 def read_data(filename):
@@ -107,6 +127,7 @@ grader.submit_tag('TextPrepare', text_prepare_results)
 
 """Now we can preprocess the titles using function *text_prepare* and  making sure that the headers don't have bad symbols:"""
 
+X_trainB = X_train
 X_train = [text_prepare(x) for x in X_train]
 X_val = [text_prepare(x) for x in X_val]
 X_test = [text_prepare(x) for x in X_test]
@@ -118,31 +139,37 @@ X_test = [text_prepare(x) for x in X_test]
 """
 
 # Dictionary of all tags from train corpus with their counts.
-tags_counts = {}
+tags_counts = Counter()
 # Dictionary of all words from train corpus with their counts.
-words_counts = {}
+words_counts = Counter()
 
-######################################
-######### YOUR CODE HERE #############
-######################################
+for tags in y_val:
+    tags_counts.update(tags)
+for docs in X_train:
+    words_counts.update(docs.split())
 
-"""We are assuming that *tags_counts* and *words_counts* are dictionaries like `{'some_word_or_tag': frequency}`. After applying the sorting procedure, results will be look like this: `[('most_popular_word_or_tag', frequency), ('less_popular_word_or_tag', frequency), ...]`. The grader gets the results in the following format (two comma-separated strings with line break):
 
+"""We are assuming that *tags_counts* and *words_counts* are dictionaries like `{'some_word_or_tag': frequency}`.
+After applying the sorting procedure, results will be look like this: `[('most_popular_word_or_tag', frequency),
+('less_popular_word_or_tag', frequency), ...]`. The grader gets the results in the following format (two comma-separated strings with line break):
     tag1,tag2,tag3
     word1,word2,word3
-
 Pay attention that in this assignment you should not submit frequencies or some additional information.
 """
 
-most_common_tags = sorted(tags_counts.items(), key=lambda x: x[1], reverse=True)[:3]
-most_common_words = sorted(words_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+most_common_tags = tags_counts.most_common(3)
+most_common_words = words_counts.most_common(3)
 
+print(most_common_tags)
+print(most_common_words)
 grader.submit_tag('WordsTagsCount', '%s\n%s' % (','.join(tag for tag, _ in most_common_tags),
                                                 ','.join(word for word, _ in most_common_words)))
 
+
 """### Transforming text to a vector
 
-Machine Learning algorithms work with numeric data and we cannot use the provided text data "as is". There are many ways to transform text data to numeric vectors. In this task you will try to use two of them.
+Machine Learning algorithms work with numeric data and we cannot use the provided text data "as is".
+There are many ways to transform text data to numeric vectors. In this task you will try to use two of them.
 
 #### Bag of words
 
@@ -177,15 +204,18 @@ And iterate over all words, and if the word is in the dictionary, we increase th
 The resulting vector will be 
 
     [1, 1, 0, 1]
-   
-Implement the described encoding in the function *my_bag_of_words* with the size of the dictionary equals to 5000. To find the most common words use train data. You can test your code using the function *test_my_bag_of_words*.
+
+Implement the described encoding in the function *my_bag_of_words* with the size of the dictionary equals to 5000. 
+To find the most common words use train data.
+You can test your code using the function *test_my_bag_of_words*.
 """
 
 DICT_SIZE = 5000
-WORDS_TO_INDEX = None  ####### YOUR CODE HERE #######
-INDEX_TO_WORDS = None  ####### YOUR CODE HERE #######
+WORDS_TO_INDEX = words_counts.keys()
+INDEX_TO_WORDS = None
 ALL_WORDS = WORDS_TO_INDEX.keys()
 
+exit(0)
 
 def my_bag_of_words(text, words_to_index, dict_size):
     """
@@ -447,16 +477,4 @@ print_words_for_tag(classifier_tfidf, 'c', mlb.classes, tfidf_reversed_vocab, AL
 print_words_for_tag(classifier_tfidf, 'c++', mlb.classes, tfidf_reversed_vocab, ALL_WORDS)
 print_words_for_tag(classifier_tfidf, 'linux', mlb.classes, tfidf_reversed_vocab, ALL_WORDS)
 
-"""### Authorization & Submission
-To submit assignment parts to Cousera platform, please, enter your e-mail and token into variables below. You can generate token on this programming assignment page. <b>Note:</b> Token expires 30 minutes after generation.
-"""
 
-grader.status()
-
-STUDENT_EMAIL = None  # EMAIL
-STUDENT_TOKEN = None  # TOKEN
-grader.status()
-
-"""If you want to submit these answers, run cell below"""
-
-grader.submit(STUDENT_EMAIL, STUDENT_TOKEN)
