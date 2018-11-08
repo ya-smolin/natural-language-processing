@@ -8,13 +8,15 @@ Original file is located at
 
 # Predict tags on StackOverflow with linear models
 
-In this assignment you will learn how to predict tags for posts from [StackOverflow](https://stackoverflow.com). To solve this task you will use multilabel classification approach.
+In this assignment you will learn how to predict tags for posts from [StackOverflow](https://stackoverflow.com). To
+solve this task you will use multilabel classification approach.
 
 ### Libraries
 
 In this task you will need the following libraries:
 - [Numpy](http://www.numpy.org) — a package for scientific computing.
-- [Pandas](https://pandas.pydata.org) — a library providing high-performance, easy-to-use data structures and data analysis tools for the Python
+- [Pandas](https://pandas.pydata.org) — a library providing high-performance, easy-to-use data structures and data
+analysis tools for the Python
 - [scikit-learn](http://scikit-learn.org/stable/index.html) — a tool for data mining and data analysis.
 - [NLTK](http://www.nltk.org) — a platform to work with natural language.
 
@@ -22,6 +24,7 @@ In this task you will need the following libraries:
 
 The following cell will download all data required for this assignment into the folder `week1/data`.
 """
+
 import sys
 from collections import Counter
 
@@ -34,10 +37,12 @@ import numpy as np
 
 sys.path.append("..")
 from common.download_utils import download_week1_resources
+
 download_week1_resources()
 
 grader = Grader()
 nltk.download('stopwords')
+
 
 def submitAll():
     """
@@ -48,7 +53,7 @@ def submitAll():
     """
     grader.status()
     STUDENT_EMAIL = "yaroslavsmolin@gmail.com"  # EMAIL
-    STUDENT_TOKEN = "Mr3HaYIApvXBJ4Xk"  # TOKEN
+    STUDENT_TOKEN = "mpLGVd6PCY5llSjQ"  # TOKEN
     grader.status()
     """If you want to submit these answers, run cell below"""
     grader.submit(STUDENT_EMAIL, STUDENT_TOKEN)
@@ -125,7 +130,8 @@ text_prepare_results = '\n'.join(prepared_questions)
 
 grader.submit_tag('TextPrepare', text_prepare_results)
 
-"""Now we can preprocess the titles using function *text_prepare* and  making sure that the headers don't have bad symbols:"""
+"""Now we can preprocess the titles using function *text_prepare* and  making sure that the headers don't have bad 
+symbols:"""
 
 X_trainB = X_train
 X_train = [text_prepare(x) for x in X_train]
@@ -148,10 +154,10 @@ for tags in y_val:
 for docs in X_train:
     words_counts.update(docs.split())
 
-
 """We are assuming that *tags_counts* and *words_counts* are dictionaries like `{'some_word_or_tag': frequency}`.
 After applying the sorting procedure, results will be look like this: `[('most_popular_word_or_tag', frequency),
-('less_popular_word_or_tag', frequency), ...]`. The grader gets the results in the following format (two comma-separated strings with line break):
+('less_popular_word_or_tag', frequency), ...]`. The grader gets the results in the following format (two 
+comma-separated strings with line break):
     tag1,tag2,tag3
     word1,word2,word3
 Pay attention that in this assignment you should not submit frequencies or some additional information.
@@ -165,7 +171,6 @@ print(most_common_words)
 grader.submit_tag('WordsTagsCount', '%s\n%s' % (','.join(tag for tag, _ in most_common_tags),
                                                 ','.join(word for word, _ in most_common_words)))
 
-
 """### Transforming text to a vector
 
 Machine Learning algorithms work with numeric data and we cannot use the provided text data "as is".
@@ -176,7 +181,8 @@ There are many ways to transform text data to numeric vectors. In this task you 
 One of the well-known approaches is a *bag-of-words* representation. To create this transformation, follow the steps:
 1. Find *N* most popular words in train corpus and numerate them. Now we have a dictionary of the most popular words.
 2. For each title in the corpora create a zero vector with the dimension equals to *N*.
-3. For each text in the corpora iterate over words which are in the dictionary and increase by 1 the corresponding coordinate.
+3. For each text in the corpora iterate over words which are in the dictionary and increase by 1 the corresponding 
+coordinate.
 
 Let's try to do it for a toy example. Imagine that we have *N* = 4 and the list of the most popular words is 
 
@@ -194,7 +200,8 @@ For this text we create a corresponding zero vector
 
     [0, 0, 0, 0]
     
-And iterate over all words, and if the word is in the dictionary, we increase the value of the corresponding position in the vector:
+And iterate over all words, and if the word is in the dictionary, we increase the value of the corresponding position 
+in the vector:
 
     'hi':  [1, 0, 0, 0]
     'how': [1, 0, 0, 0] # word 'how' is not in our dictionary
@@ -211,11 +218,11 @@ You can test your code using the function *test_my_bag_of_words*.
 """
 
 DICT_SIZE = 5000
-WORDS_TO_INDEX = words_counts.keys()
-INDEX_TO_WORDS = None
+INDEX_TO_WORDS = dict(words_counts.most_common(DICT_SIZE)).keys()
+indexes = list(range(0, DICT_SIZE))
+WORDS_TO_INDEX = dict(zip(INDEX_TO_WORDS, indexes))
 ALL_WORDS = WORDS_TO_INDEX.keys()
 
-exit(0)
 
 def my_bag_of_words(text, words_to_index, dict_size):
     """
@@ -225,9 +232,9 @@ def my_bag_of_words(text, words_to_index, dict_size):
         return a vector which is a bag-of-words representation of 'text'
     """
     result_vector = np.zeros(dict_size)
-    ######################################
-    ######### YOUR CODE HERE #############
-    ######################################
+    for word in text.split():
+        if word in words_to_index:
+            result_vector[words_to_index[word]] += 1
     return result_vector
 
 
@@ -256,22 +263,24 @@ X_test_mybag = sp_sparse.vstack(
 print('X_train shape ', X_train_mybag.shape)
 print('X_val shape ', X_val_mybag.shape)
 print('X_test shape ', X_test_mybag.shape)
-
-"""As you might notice, we transform the data to sparse representation, to store the useful information efficiently. There are many [types](https://docs.scipy.org/doc/scipy/reference/sparse.html) of such representations, however sklearn algorithms can work only with [csr](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html#scipy.sparse.csr_matrix) matrix, so we will use this one.
-
-**Task 3 (BagOfWords).** For the 11th row in *X_train_mybag* find how many non-zero elements it has. In this task the answer (variable *non_zero_elements_count*) should be a number, e.g. 20.
-"""
-
 row = X_train_mybag[10].toarray()[0]
-non_zero_elements_count = None  ####### YOUR CODE HERE #######
+non_zero_elements_count = np.sum(row != 0)
 
 grader.submit_tag('BagOfWords', str(non_zero_elements_count))
 
+
 """#### TF-IDF
 
-The second approach extends the bag-of-words framework by taking into account total frequencies of words in the corpora. It helps to penalize too frequent words and provide better features space. 
-
-Implement function *tfidf_features* using class [TfidfVectorizer](http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html) from *scikit-learn*. Use *train* corpus to train a vectorizer. Don't forget to take a look into the arguments that you can pass to it. We suggest that you filter out too rare words (occur less than in 5 titles) and too frequent words (occur more than in 90% of the titles). Also, use bigrams along with unigrams in your vocabulary.
+The second approach extends the bag-of-words framework by taking into account total frequencies of words in the corpora.
+It helps to penalize too frequent words and provide better features space. 
+Implement function *tfidf_features* using class 
+[TfidfVectorizer](http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer
+.html) 
+from *scikit-learn*. Use *train* corpus to train a vectorizer. 
+Don't forget to take a look into the arguments that you can pass to it. 
+We suggest that you filter out too rare words (occur less than in 5 titles) and too frequent words (occur more than 
+in 90% of the titles).
+Also, use bigrams along with unigrams in your vocabulary.
 """
 
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -283,38 +292,42 @@ def tfidf_features(X_train, X_val, X_test):
         return TF-IDF vectorized representation of each sample and vocabulary
     """
     # Create TF-IDF vectorizer with a proper parameters choice
+    vectorizer = TfidfVectorizer(min_df=5, max_df=0.9, ngram_range=(1, 2), token_pattern="\S+")
     # Fit the vectorizer on the train set
+    tfidf_vectorizer = vectorizer.fit(X_train)
     # Transform the train, test, and val sets and return the result
-
-    tfidf_vectorizer = None  ####### YOUR CODE HERE #######
-
-    ######################################
-    ######### YOUR CODE HERE #############
-    ######################################
-
+    X_train = tfidf_vectorizer.transform(X_train)
+    X_val = tfidf_vectorizer.transform(X_val)
+    X_test = tfidf_vectorizer.transform(X_test)
     return X_train, X_val, X_test, tfidf_vectorizer.vocabulary_
 
 
-"""Once you have done text preprocessing, always have a look at the results. Be very careful at this step, because the performance of future models will drastically depend on it. 
+"""Once you have done text preprocessing, always have a look at the results. 
+Be very careful at this step, because the performance of future models will drastically depend on it. 
 
-In this case, check whether you have c++ or c# in your vocabulary, as they are obviously important tokens in our tags prediction task:
+In this case, check whether you have c++ or c# in your vocabulary, as they are obviously important tokens in our
+ tags prediction task:
 """
 
 X_train_tfidf, X_val_tfidf, X_test_tfidf, tfidf_vocab = tfidf_features(X_train, X_val, X_test)
 tfidf_reversed_vocab = {i: word for word, i in tfidf_vocab.items()}
 
-######### YOUR CODE HERE #############
+assert "c++" in "c++" in tfidf_vocab and "c#" in tfidf_vocab
 
-"""If you can't find it, we need to understand how did it happen that we lost them? It happened during the built-in tokenization of TfidfVectorizer. Luckily, we can influence on this process. Get back to the function above and use '(\S+)' regexp as a *token_pattern* in the constructor of the vectorizer.
+"""If you can't find it, we need to understand how did it happen that we lost them? It happened during the built-in 
+tokenization of TfidfVectorizer. 
+Luckily, we can influence on this process. 
+Get back to the function above and use '(\S+)' regexp as a *token_pattern* in the constructor of the vectorizer.
 
 Now, use this transormation for the data and check again.
 """
-
-######### YOUR CODE HERE #############
-
 """### MultiLabel classifier
 
-As we have noticed before, in this task each example can have multiple tags. To deal with such kind of prediction, we need to transform labels in a binary form and the prediction will be a mask of 0s and 1s. For this purpose it is convenient to use [MultiLabelBinarizer](http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer.html) from *sklearn*.
+As we have noticed before, in this task each example can have multiple tags. To deal with such kind of prediction, 
+we need to transform labels in a binary form and the prediction will be a mask of 0s and 1s. For this purpose it is
+convenient to use 
+[MultiLabelBinarizer]
+(http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MultiLabelBinarizer.html) from *sklearn*.
 """
 
 from sklearn.preprocessing import MultiLabelBinarizer
@@ -323,7 +336,16 @@ mlb = MultiLabelBinarizer(classes=sorted(tags_counts.keys()))
 y_train = mlb.fit_transform(y_train)
 y_val = mlb.fit_transform(y_val)
 
-"""Implement the function *train_classifier* for training a classifier. In this task we suggest to use One-vs-Rest approach, which is implemented in [OneVsRestClassifier](http://scikit-learn.org/stable/modules/generated/sklearn.multiclass.OneVsRestClassifier.html) class. In this approach *k* classifiers (= number of tags) are trained. As a basic classifier, use [LogisticRegression](http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html). It is one of the simplest methods, but often it performs good enough in text classification tasks. It might take some time, because a number of classifiers to train is large."""
+
+"""Implement the function *train_classifier* for training a classifier. 
+In this task we suggest to use One-vs-Rest approach, which is implemented in 
+[OneVsRestClassifier]
+(http://scikit-learn.org/stable/modules/generated/sklearn.multiclass.OneVsRestClassifier.html) class.
+ In this approach *k* classifiers (= number of tags) are trained. 
+ As a basic classifier, use 
+ [LogisticRegression](http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html).
+  It is one of the simplest methods, but often it performs good enough in text classification tasks.
+   It might take some time, because a number of classifiers to train is large."""
 
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.linear_model import LogisticRegression, RidgeClassifier
@@ -335,12 +357,10 @@ def train_classifier(X_train, y_train):
       
       return: trained classifier
     """
-
     # Create and fit LogisticRegression wraped into OneVsRestClassifier.
-
-    ######################################
-    ######### YOUR CODE HERE #############
-    ######################################
+    classif = OneVsRestClassifier(LogisticRegression())
+    classif.fit(X_train, y_train)
+    return classif
 
 
 """Train the classifiers for different data transformations: *bag-of-words* and *tf-idf*."""
@@ -367,7 +387,10 @@ for i in range(3):
         ','.join(y_val_pred_inversed[i])
     ))
 
-"""Now, we would need to compare the results of different predictions, e.g. to see whether TF-IDF transformation helps or to try different regularization techniques in logistic regression. For all these experiments, we need to setup evaluation procedure.
+
+"""Now, we would need to compare the results of different predictions, e.g. to see whether TF-IDF transformation helps
+ or to try different regularization techniques in logistic regression. For all these experiments, 
+ we need to setup evaluation procedure.
 
 ### Evaluation
 
@@ -375,9 +398,11 @@ To evaluate the results we will use several classification metrics:
  - [Accuracy](http://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html)
  - [F1-score](http://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html)
  - [Area under ROC-curve](http://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html)
- - [Area under precision-recall curve](http://scikit-learn.org/stable/modules/generated/sklearn.metrics.average_precision_score.html#sklearn.metrics.average_precision_score) 
+ - [Area under precision-recall curve](http://scikit-learn.org/stable/modules/generated/sklearn.metrics
+ .average_precision_score.html#sklearn.metrics.average_precision_score) 
  
-Make sure you are familiar with all of them. How would you expect the things work for the multi-label scenario? Read about micro/macro/weighted averaging following the sklearn links provided above.
+Make sure you are familiar with all of them. How would you expect the things work for the multi-label scenario? Read 
+about micro/macro/weighted averaging following the sklearn links provided above.
 """
 
 from sklearn.metrics import accuracy_score
@@ -394,10 +419,13 @@ from sklearn.metrics import recall_score
 
 
 def print_evaluation_scores(y_val, predicted):
-    None
-    ######################################
-    ######### YOUR CODE HERE #############
-    ######################################
+    print(accuracy_score(y_val, predicted))
+    print(f1_score(y_val, predicted, average="macro"))
+    print(f1_score(y_val, predicted, average="micro"))
+    print(f1_score(y_val, predicted, average="weighted"))
+    print(average_precision_score(y_val, predicted, average="macro"))
+    print(average_precision_score(y_val, predicted, average="micro"))
+    print(average_precision_score(y_val, predicted, average="weighted"))
 
 
 print('Bag-of-words')
@@ -405,7 +433,9 @@ print_evaluation_scores(y_val, y_val_predicted_labels_mybag)
 print('Tfidf')
 print_evaluation_scores(y_val, y_val_predicted_labels_tfidf)
 
-"""You might also want to plot some generalization of the [ROC curve](http://scikit-learn.org/stable/modules/model_evaluation.html#receiver-operating-characteristic-roc) for the case of multi-label classification. Provided function *roc_auc* can make it for you. The input parameters of this function are:
+"""You might also want to plot some generalization of the [ROC curve](
+http://scikit-learn.org/stable/modules/model_evaluation.html#receiver-operating-characteristic-roc) for the case of 
+multi-label classification. Provided function *roc_auc* can make it for you. The input parameters of this function are:
  - true labels
  - decision functions scores
  - number of classes
@@ -413,40 +443,43 @@ print_evaluation_scores(y_val, y_val_predicted_labels_tfidf)
 
 from metrics import roc_auc
 
-# %matplotlib inline
-
 n_classes = len(tags_counts)
 roc_auc(y_val, y_val_predicted_scores_mybag, n_classes)
 
 n_classes = len(tags_counts)
 roc_auc(y_val, y_val_predicted_scores_tfidf, n_classes)
 
-"""**Task 4 (MultilabelClassification).** Once we have the evaluation set up, we suggest that you experiment a bit with training your classifiers. We will use *F1-score weighted* as an evaluation metric. Our recommendation:
+
+"""**Task 4 (MultilabelClassification).** Once we have the evaluation set up, we suggest that you experiment a bit with
+ training your classifiers. We will use *F1-score weighted* as an evaluation metric. Our recommendation:
 - compare the quality of the bag-of-words and TF-IDF approaches and chose one of them.
-- for the chosen one, try *L1* and *L2*-regularization techniques in Logistic Regression with different coefficients (e.g. C equal to 0.1, 1, 10, 100).
+- for the chosen one, try *L1* and *L2*-regularization techniques in Logistic Regression with different coefficients
+ (e.g. C equal to 0.1, 1, 10, 100).
 
 You also could try other improvements of the preprocessing / model, if you want.
 """
 
-######################################
-######### YOUR CODE HERE #############
-######################################
-
 """When you are happy with the quality, create predictions for *test* set, which you will submit to Coursera."""
 
-test_predictions = None  ######### YOUR CODE HERE #############
+test_predictions = classifier_mybag.predict(X_test_mybag)  ######### YOUR CODE HERE #############
 test_pred_inversed = mlb.inverse_transform(test_predictions)
 
 test_predictions_for_submission = '\n'.join('%i\t%s' % (i, ','.join(row)) for i, row in enumerate(test_pred_inversed))
 grader.submit_tag('MultilabelClassification', test_predictions_for_submission)
 
+# In[]:
 """### Analysis of the most important features
 
-Finally, it is usually a good idea to look at the features (words or n-grams) that are used with the largest weigths in your logistic regression model.
-
-Implement the function *print_words_for_tag* to find them. Get back to sklearn documentation on [OneVsRestClassifier](http://scikit-learn.org/stable/modules/generated/sklearn.multiclass.OneVsRestClassifier.html) and [LogisticRegression](http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html) if needed.
+Finally, it is usually a good idea to look at the features (words or n-grams) that are used with the largest weigths 
+in your logistic regression model. Implement the function *print_words_for_tag* to find them. Get back to sklearn 
+documentation on 
+[OneVsRestClassifier](http://scikit-learn.org/stable/modules/generated/sklearn.multiclass.OneVsRestClassifier.html) 
+and 
+[LogisticRegression](http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
+if needed.
 """
 
+import heapq
 
 def print_words_for_tag(classifier, tag, tags_classes, index_to_words, all_words):
     """
@@ -459,16 +492,15 @@ def print_words_for_tag(classifier, tag, tags_classes, index_to_words, all_words
         return nothing, just print top 5 positive and top 5 negative words for current tag
     """
     print('Tag:\t{}'.format(tag))
-
+    indexes = list(range(0, len(tags_classes)))
+    word2ind = dict(zip(tags_classes, indexes))
     # Extract an estimator from the classifier for the given tag.
     # Extract feature coefficients from the estimator. 
 
-    ######################################
-    ######### YOUR CODE HERE #############
-    ######################################
-
-    top_positive_words = None  # top-5 words sorted by the coefficiens.
-    top_negative_words = None  # bottom-5 words  sorted by the coefficients.
+    weights = classifier.coef_[word2ind[tag]]
+    arr = weights.argsort()
+    top_positive_words = [index_to_words[i] for i in arr[-5:]] # top-5 words sorted by the coefficiens.
+    top_negative_words = [index_to_words[i] for i in arr[:5]]  # bottom-5 words  sorted by the coefficients.
     print('Top positive words:\t{}'.format(', '.join(top_positive_words)))
     print('Top negative words:\t{}\n'.format(', '.join(top_negative_words)))
 
@@ -477,4 +509,4 @@ print_words_for_tag(classifier_tfidf, 'c', mlb.classes, tfidf_reversed_vocab, AL
 print_words_for_tag(classifier_tfidf, 'c++', mlb.classes, tfidf_reversed_vocab, ALL_WORDS)
 print_words_for_tag(classifier_tfidf, 'linux', mlb.classes, tfidf_reversed_vocab, ALL_WORDS)
 
-
+submitAll()
